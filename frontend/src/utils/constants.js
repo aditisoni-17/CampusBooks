@@ -14,8 +14,9 @@ export const CATEGORIES = [
 
 export const LISTING_TYPES = ["All", "Sale", "Exchange", "Donation"];
 
-export const STATUS_OPTIONS = ["Available", "Sold"];
+export const CONDITIONS = ["All", "Like New", "Good", "Fair", "Poor"];
 
+export const STATUS_OPTIONS = ["Available", "Sold"];
 
 export const COLORS = {
   primary: "#4A90E2",

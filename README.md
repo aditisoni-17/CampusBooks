@@ -88,7 +88,6 @@ This project uses AsyncStorage as its local persistence layer.
 ### Setup
 
 ```bash
-git clone <your-repository-url>
 cd CampusBooks
 cd frontend
 npm install
@@ -98,8 +97,6 @@ npm install
 
 
 ```bash
-cd frontend
-npm install
 npx expo start
 ```
 

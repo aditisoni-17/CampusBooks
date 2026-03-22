@@ -8,8 +8,8 @@ import { Ionicons } from "@expo/vector-icons";
 import BrowseScreen from "../screens/BrowseScreen";
 import BookDetailScreen from "../screens/BookDetailScreen";
 import CreateListingScreen from "../screens/CreateListingScreen";
-import MyListingScreen from "../screens/MyListingScreen";
-import WishListScreen from "../screens/WishListScreen";
+import MyListingsScreen from "../screens/MyListingsScreen";
+import WishlistScreen from "../screens/WishlistScreen";
 
 import { COLORS } from "../utils/constants";
 
@@ -52,7 +52,7 @@ function MyListingsStack() {
     >
       <Stack.Screen
         name="MyListingsMain"
-        component={MyListingScreen}
+        component={MyListingsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -76,7 +76,7 @@ function WishlistStack() {
     >
       <Stack.Screen
         name="WishlistMain"
-        component={WishListScreen}
+        component={WishlistScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

@@ -1,16 +1,20 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
-  getBooks,
   addBook,
-  updateBook,
-  removeBook,
-  toggleStatus
-} from '../services/bookService';
-import {
-  getWishlist,
   addToWishlist,
-  removeFromWishlist
-} from '../services/wishlistService';
+  getWishlist,
+  getBooks,
+  removeBook,
+  removeFromWishlist,
+  toggleStatus,
+  updateBook,
+} from "../services";
 
 const AppContext = createContext(null);
 
@@ -21,48 +25,58 @@ export const AppProvider = ({ children }) => {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [bookData, wishlistData] = await Promise.all([getBooks(), getWishlist()]);
-    setBooks(bookData);
-    setWishlist(wishlistData);
-    setLoading(false);
+    try {
+      const [bookData, wishlistData] = await Promise.all([
+        getBooks(),
+        getWishlist(),
+      ]);
+      setBooks(bookData);
+      setWishlist(wishlistData);
+      return { books: bookData, wishlist: wishlistData };
+    } catch (error) {
+      console.error("[AppContext] failed to load persisted data", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    loadData();
+    loadData().catch(() => {});
   }, [loadData]);
 
-  const createListing = async data => {
+  const createListing = async (data) => {
     const newBook = await addBook(data);
-    setBooks(prev => [newBook, ...prev]);
+    await loadData();
     return newBook;
   };
 
   const editListing = async (id, updates) => {
     const updated = await updateBook(id, updates);
-    setBooks(prev => prev.map(item => (item.id === id ? updated : item)));
+    await loadData();
     return updated;
   };
 
-  const deleteListing = async id => {
+  const deleteListing = async (id) => {
     await removeBook(id);
-    setBooks(prev => prev.filter(item => item.id !== id));
+    await loadData();
   };
 
-  const changeStatus = async id => {
+  const changeStatus = async (id) => {
     const updated = await toggleStatus(id);
-    setBooks(prev => prev.map(item => (item.id === id ? updated : item)));
+    await loadData();
     return updated;
   };
 
-  const addWishlistItem = async book => {
+  const addWishlistItem = async (book) => {
     const updated = await addToWishlist(book);
-    setWishlist(updated);
+    await loadData();
     return updated;
   };
 
-  const removeWishlistItem = async id => {
+  const removeWishlistItem = async (id) => {
     const updated = await removeFromWishlist(id);
-    setWishlist(updated);
+    await loadData();
     return updated;
   };
 
@@ -78,7 +92,7 @@ export const AppProvider = ({ children }) => {
         deleteListing,
         changeStatus,
         addWishlistItem,
-        removeWishlistItem
+        removeWishlistItem,
       }}
     >
       {children}
@@ -87,4 +101,3 @@ export const AppProvider = ({ children }) => {
 };
 
 export const useAppContext = () => useContext(AppContext);
-

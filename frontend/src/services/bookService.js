@@ -3,76 +3,108 @@ import storageService from "./storageService";
 
 const BOOKS_KEY = "BOOKS";
 
+const normalizeStatus = (status) => (status === "Taken" ? "Sold" : status);
+
+const normalizeBook = (book) => ({
+  ...book,
+  status: normalizeStatus(book.status || "Available"),
+  location: book.location || "Campus meetup spot",
+  imageUri: book.imageUri || null,
+});
+
+const normalizeBooks = (books) => books.map(normalizeBook);
+
+const readBooks = async () => {
+  const books = await storageService.getArray(BOOKS_KEY);
+  return normalizeBooks(books);
+};
+
+const writeBooks = (books) =>
+  storageService.setParsedItem(BOOKS_KEY, normalizeBooks(books));
+
 const seedBooks = async () => {
-  const existing = await storageService.getItem(BOOKS_KEY);
+  const existing = await readBooks();
   if (existing && existing.length) {
     return existing;
   }
-  await storageService.setItem(BOOKS_KEY, mockBooks);
-  return mockBooks;
+
+  const seededBooks = normalizeBooks(mockBooks);
+  await writeBooks(seededBooks);
+  return seededBooks;
 };
 
-export const getBooks = async () => {
-  const books = await storageService.getItem(BOOKS_KEY);
+export const listBooks = async () => {
+  const books = await readBooks();
   if (books && books.length) {
     return books;
   }
+
   return seedBooks();
 };
 
-const saveBooks = (books) => storageService.setItem(BOOKS_KEY, books);
-
-export const addBook = async (book) => {
-  const books = await getBooks();
-  const newBook = {
+export const createBook = async (book) => {
+  const books = await listBooks();
+  const newBook = normalizeBook({
     id: Date.now().toString(),
     status: "Available",
     ...book,
-  };
+  });
   const updated = [newBook, ...books];
-  await saveBooks(updated);
+  await writeBooks(updated);
   return newBook;
 };
 
 export const updateBook = async (id, updates) => {
-  const books = await getBooks();
+  const books = await listBooks();
   const updated = books.map((item) =>
-    item.id === id ? { ...item, ...updates } : item
+    item.id === id ? normalizeBook({ ...item, ...updates }) : item
   );
-  await saveBooks(updated);
+
+  await writeBooks(updated);
   return updated.find((item) => item.id === id);
 };
 
-export const removeBook = async (id) => {
-  const books = await getBooks();
+export const deleteBook = async (id) => {
+  const books = await listBooks();
   const updated = books.filter((item) => item.id !== id);
-  await saveBooks(updated);
+  await writeBooks(updated);
   return updated;
 };
 
-export const toggleStatus = async (id) => {
-  const books = await getBooks();
+export const toggleBookStatus = async (id) => {
+  const books = await listBooks();
   const updated = books.map((item) =>
     item.id === id
-      ? { ...item, status: item.status === "Available" ? "Sold" : "Available" }
+      ? normalizeBook({
+          ...item,
+          status: item.status === "Available" ? "Sold" : "Available",
+        })
       : item
   );
-  await saveBooks(updated);
+
+  await writeBooks(updated);
   return updated.find((item) => item.id === id);
 };
 
-export const getBooksByOwner = async (contact) => {
-  const books = await getBooks();
+export const listBooksByOwner = async (contact) => {
+  const books = await listBooks();
   return books.filter((item) => item.contact === contact);
 };
 
 export const getSimilarBooks = async (book) => {
-  const books = await getBooks();
-  return books.filter(
+  const books = await listBooks();
+  const similarBooks = books.filter(
     (item) =>
       item.id !== book.id &&
       (item.category === book.category || item.author === book.author)
   );
+  return similarBooks;
 };
 
 export const clearBooks = () => storageService.removeItem(BOOKS_KEY);
+
+export const getBooks = listBooks;
+export const addBook = createBook;
+export const removeBook = deleteBook;
+export const toggleStatus = toggleBookStatus;
+export const getBooksByOwner = listBooksByOwner;

@@ -67,7 +67,7 @@ const mockBooks = [
     condition: 'Good',
     price: 0,
     listingType: 'Donation',
-    status: 'Taken',
+    status: 'Sold',
     contact: 'uxclub@campus.edu',
     location: 'Design Lab'
   }

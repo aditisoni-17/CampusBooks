@@ -1,11 +1,10 @@
 import { StatusBar } from "expo-status-bar";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-import {  StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import AppNavigator from "./src/navigation/AppNavigator";
-import { COLORS } from "./src/utils/constants";
 import { AppProvider } from "./src/context/AppContext";
+import { COLORS } from "./src/utils/constants";
 
 export default function App() {
   return (
@@ -23,7 +22,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
 });
-
 

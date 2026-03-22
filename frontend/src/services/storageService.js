@@ -1,20 +1,53 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const getItem = async key => {
+const getParsedItem = async (key, fallback = null) => {
   const value = await AsyncStorage.getItem(key);
-  return value ? JSON.parse(value) : null;
+  return value ? JSON.parse(value) : fallback;
 };
 
-const setItem = (key, value) => AsyncStorage.setItem(key, JSON.stringify(value));
+const setParsedItem = (key, value) =>
+  AsyncStorage.setItem(key, JSON.stringify(value));
 
-const removeItem = key => AsyncStorage.removeItem(key);
+const removeItem = (key) => AsyncStorage.removeItem(key);
 
-const clear = () => AsyncStorage.clear();
+const clearAll = () => AsyncStorage.clear();
 
-export default {
+const getArray = async (key) => {
+  const value = await getParsedItem(key, []);
+  return Array.isArray(value) ? value : [];
+};
+
+const getObject = async (key) => {
+  const value = await getParsedItem(key, {});
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+};
+
+const getItem = getParsedItem;
+const setItem = setParsedItem;
+const clear = clearAll;
+
+const storageService = {
+  getParsedItem,
+  setParsedItem,
+  removeItem,
+  clearAll,
+  getArray,
+  getObject,
   getItem,
   setItem,
-  removeItem,
-  clear
+  clear,
 };
 
+export {
+  clear,
+  clearAll,
+  getArray,
+  getItem,
+  getObject,
+  getParsedItem,
+  removeItem,
+  setItem,
+  setParsedItem,
+};
+
+export default storageService;

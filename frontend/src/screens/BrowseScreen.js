@@ -1,12 +1,10 @@
-import { useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useCallback, useState } from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import BookCard from "../components/BookCard";
+import EmptyState from "../components/EmptyState";
 import FilterBar from "../components/FilterBar";
+import SearchBadge from "../components/SearchBadge";
 import SearchBar from "../components/SearchBar";
 import { useAppContext } from "../context/AppContext";
 import {
@@ -17,11 +15,20 @@ import {
 } from "../utils/constants";
 
 export default function BrowseScreen({ navigation }) {
-  const { books } = useAppContext();
+  const { books, loading, reload } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [listingType, setListingType] = useState("All");
   const [condition, setCondition] = useState("All");
+  const activeFilterCount = [category, listingType, condition].filter(
+    (value) => value !== "All"
+  ).length;
+
+  useFocusEffect(
+    useCallback(() => {
+      reload().catch(() => {});
+    }, [reload])
+  );
 
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
@@ -38,22 +45,24 @@ export default function BrowseScreen({ navigation }) {
   });
 
   const renderBook = ({ item }) => (
-    <TouchableOpacity
-      style={styles.bookCard}
+    <BookCard
+      title={item.title}
+      author={item.author}
+      price={item.price}
+      imageUri={item.imageUri}
       onPress={() => navigation.navigate("BookDetail", { book: item })}
-    >
-      <View style={styles.bookInfo}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.author}>{item.author}</Text>
-        <View style={styles.badges}>
-          <Text style={styles.badge}>{item.condition}</Text>
-          <Text style={[styles.badge, styles.typeBadge]}>
-            {item.listingType}
-          </Text>
-        </View>
-        {item.price > 0 && <Text style={styles.price}>₹{item.price}</Text>}
-      </View>
-    </TouchableOpacity>
+      badges={[
+        { label: item.condition, style: styles.badge },
+        { label: item.listingType, style: [styles.badge, styles.typeBadge] },
+        {
+          label: item.status,
+          style: [
+            styles.badge,
+            item.status === "Available" ? styles.availableBadge : styles.soldBadge,
+          ],
+        },
+      ]}
+    />
   );
 
   return (
@@ -85,13 +94,29 @@ export default function BrowseScreen({ navigation }) {
         onSelect={setCondition}
       />
 
+      <View style={styles.debugRow}>
+        <SearchBadge
+          label="Results"
+          value={loading ? "Loading..." : filteredBooks.length}
+          tone="success"
+        />
+        <SearchBadge label="Filters" value={activeFilterCount} />
+        <SearchBadge
+          label="Query"
+          value={searchQuery.trim() ? `"${searchQuery.trim()}"` : "None"}
+        />
+      </View>
+
       <FlatList
         data={filteredBooks}
         renderItem={renderBook}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No books found</Text>
+          <EmptyState
+            title="No books found"
+            description="Try clearing a filter or searching with a different keyword."
+          />
         }
       />
     </View>
@@ -106,53 +131,26 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingTop: 8,
+    paddingBottom: 24,
   },
-  bookCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  bookInfo: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  author: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginBottom: 8,
-  },
-  badges: {
+  debugRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   badge: {
     fontSize: 12,
-    color: COLORS.primary,
     backgroundColor: COLORS.background,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    color: COLORS.primary,
   },
   typeBadge: {
     color: COLORS.secondary,
   },
-  price: {
-    fontSize: 16,
-    fontWeight: "700",
+  availableBadge: {
     color: COLORS.success,
   },
-  emptyText: {
-    textAlign: "center",
-    color: COLORS.textLight,
-    marginTop: 32,
+  soldBadge: {
+    color: COLORS.danger,
   },
 });
